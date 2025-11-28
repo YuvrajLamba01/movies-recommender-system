@@ -77,23 +77,9 @@ Python
 
 from sklearn.metrics.pairwise import cosine_similarity
 similarity = cosine_similarity(vectors)
-💻 How to Run Locally
-Follow these steps to set up the project on your local machine.
+.
 
-1. Clone the Repository
-Bash
 
-git clone [https://github.com/YOUR_USERNAME/CineMatch-AI.git](https://github.com/YOUR_USERNAME/CineMatch-AI.git)
-cd CineMatch-AI
-2. Install Dependencies
-Bash
-
-pip install -r requirements.txt
-3. Run the App
-Bash
-
-streamlit run app.py
-The app will open in your browser at http://localhost:8501.
 
 🗂️ Project Structure
 Plaintext
