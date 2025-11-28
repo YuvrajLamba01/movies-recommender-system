@@ -1,243 +1,127 @@
-🎬 CineMatch AI — Movie Recommendation System
-🚀 Streamlit App • Machine Learning • TMDB API 
+# 🎬 CineMatch AI — Intelligent Movie Recommendation System
 
-CineMatch AI is an intelligent movie recommendation system that helps users discover similar movies using content-based filtering, NLP, and cosine similarity.
-The app features a modern Streamlit UI, real-time TMDB API posters & data, and a fast, precomputed ML model.
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://movies-recommender-system-ggjdknuhjmqboacvkstdxo.streamlit.app/)
+![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
+![Scikit-Learn](https://img.shields.io/badge/Library-Scikit--Learn-orange)
+![API](https://img.shields.io/badge/API-TMDB-green)
 
-🔗 Live App: https://movies-recommender-system-ggjdknuhjmqboacvkstdxo.streamlit.app/
+**CineMatch AI** is a powerful content-based movie recommendation engine. By utilizing Natural Language Processing (NLP) and Cosine Similarity, it analyzes movie metadata (genres, keywords, cast, crew, and overview) to suggest the top 5 most relevant movies for any selection.
 
-📦 Tech Stack: Python, Streamlit, Scikit-Learn, Pandas, TMDB API
-🧠 Model: NLP → Bag-of-Words (5000 tokens) → Cosine Similarity
+The application features a modern, responsive UI built with **Streamlit** and fetches real-time movie posters and ratings via the **TMDB API**.
 
+🔗 **[Live Demo: Click Here to Try the App](https://movies-recommender-system-ggjdknuhjmqboacvkstdxo.streamlit.app/)**
 
+---
 
-⭐ Features
-🔥 Smart ML Recommendations
+## 🚀 Features
 
-Top 5 similar movies using cosine similarity
+### 🔥 Smart ML Recommendations
+* **Content-Based Filtering:** Uses a "Bag-of-Words" approach combining Overviews, Genres, Keywords, Cast, and Director.
+* **Cosine Similarity:** Calculates the angle between movie vectors to find the closest matches.
+* **Instant Results:** Uses a precomputed similarity matrix for sub-second responses.
 
-Precomputed similarity matrix for instant results
+### 🎥 TMDB API Integration
+* Fetches high-quality **HD Posters**.
+* Displays real-time **Ratings** and **Release Years**.
+* Provides full movie overviews dynamically.
+* *Robust error handling with retry logic for API limits.*
 
-Content-based filtering (overview + genres + keywords + cast + director)
+### 🎨 Premium Modern UI
+* **Custom Styling:** Dark theme with gradient titles and card hover effects.
+* **Responsive:** Fully mobile-friendly layout.
+* **Smooth UX:** JavaScript integration for smooth scrolling and interactive "Show Overview" toggles.
 
-🎥 TMDB API Integration
+---
 
-HD posters
+## 🛠️ Tech Stack
 
-Ratings
+* **Frontend:** [Streamlit](https://streamlit.io/) (Custom CSS & JS)
+* **Language:** Python 3.x
+* **Machine Learning:** Scikit-Learn (CountVectorizer, Cosine Similarity)
+* **Data Processing:** Pandas, NumPy
+* **API:** TMDB (The Movie Database)
+* **Data Serialization:** Pickle
 
-Release year
+---
 
-Full movie overview
+## 🧠 The Machine Learning Pipeline
 
-🎨 Premium Modern UI
+The recommendation engine was built using the **TMDB 5000 Movies Dataset**. Here is the step-by-step process of how the model works:
 
-Custom CSS styling (cards, shadows, animations)
+### 1. Data Loading & Merging
+We merged the `tmdb_5000_movies.csv` and `tmdb_5000_credits.csv` datasets on the `title` column to create a unified dataframe containing `movie_id`, `overview`, `genres`, `keywords`, `cast`, and `crew`.
 
-Responsive design (mobile-friendly)
+### 2. Data Cleaning & Preprocessing
+Raw data contained JSON-like strings. We converted these into usable Python lists:
+* **Genres & Keywords:** Extracted names.
+* **Cast:** Filtered to keep only the **top 3 actors**.
+* **Crew:** Extracted only the **Director**.
+* **Space Removal:** Converted "Science Fiction" → `ScienceFiction` and "Johnny Depp" → `JohnnyDepp` to create unique tokens.
 
-Smooth scroll using JavaScript
-
-Gradient titles
-
-Interactive “Show Overview” cards
-
-⚡ Fast & Lightweight
-
-Uses .pkl files for ultra-fast loading
-
-Optimized queries
-
-Robust fallback when TMDB fails
-
-🧠 Machine Learning Pipeline
-
-Your ML model was built entirely from the TMDB 5000 Movies Dataset.
-
-1️⃣ Load and Merge Data
-
-Datasets used:
-
-tmdb_5000_movies.csv
-
-tmdb_5000_credits.csv
-
-Merged on title:
-
-movies = movies.merge(credits, on='title')
-movies = movies[['movie_id','title','overview','genres','keywords','cast','crew']]
-
-2️⃣ Clean JSON-like Columns → Python Lists
-
-Using ast.literal_eval:
-
-Genres & Keywords
-def convert(text):
-    return [i['name'] for i in ast.literal_eval(text)]
-
-Cast — keep top 3 actors
-movies['cast'] = movies['cast'].apply(lambda x: x[:3])
-
-Crew — extract only Director(s)
-def fetch_director(text):
-    return [i['name'] for i in ast.literal_eval(text) if i['job']=='Director']
-
-3️⃣ Remove Spaces in Names
-def collapse(L):
-    return [i.replace(" ","") for i in L]
-
-
-Examples:
-
-"Science Fiction" → ScienceFiction
-
-"Johnny Depp" → JohnnyDepp
-
-4️⃣ NLP Tag Creation
-
-Overview → tokenized
-Genres → cleaned
-Keywords → keywords
-Cast → top actors
-Crew → director(s)
-
-Combine everything:
-
+### 3. Tag Creation (NLP)
+We concatenated all text features into a single `tags` column:
+```python
 movies['tags'] = movies['overview'] + movies['genres'] + movies['keywords'] + movies['cast'] + movies['crew']
-new['tags'] = new['tags'].apply(lambda x: " ".join(x))
+4. Vectorization (Bag-of-Words)
+We used CountVectorizer to convert text data into numerical vectors, limiting the model to the 5000 most frequent words and removing English stop words.
 
+Python
 
-Each movie now has a rich text representation.
-
-5️⃣ Vectorization (Bag-of-Words)
 from sklearn.feature_extraction.text import CountVectorizer
 cv = CountVectorizer(max_features=5000, stop_words='english')
-vector = cv.fit_transform(new['tags']).toarray()
+vectors = cv.fit_transform(new_df['tags']).toarray()
+5. Similarity Calculation
+We calculated the Cosine Similarity between all vectors. This resulted in a 4803 × 4803 matrix representing the distance between every movie.
 
-6️⃣ Cosine Similarity Matrix
+Python
+
 from sklearn.metrics.pairwise import cosine_similarity
-similarity = cosine_similarity(vector)
+similarity = cosine_similarity(vectors)
+💻 How to Run Locally
+Follow these steps to set up the project on your local machine.
 
+1. Clone the Repository
+Bash
 
-Creates a 4803 × 4803 matrix of similarity scores.
+git clone [https://github.com/YOUR_USERNAME/CineMatch-AI.git](https://github.com/YOUR_USERNAME/CineMatch-AI.git)
+cd CineMatch-AI
+2. Install Dependencies
+Bash
 
-7️⃣ Recommend Function
-def recommend(movie):
-    index = new[new['title'] == movie].index[0]
-    distances = sorted(list(enumerate(similarity[index])),
-                       reverse=True,
-                       key=lambda x: x[1])[1:6]
-    return distances
+pip install -r requirements.txt
+3. Run the App
+Bash
 
+streamlit run app.py
+The app will open in your browser at http://localhost:8501.
 
-Returns top 5 most similar movies.
+🗂️ Project Structure
+Plaintext
 
-8️⃣ Save Final Model for Deployment
-pickle.dump(new, open('movies.pkl','wb'))
-pickle.dump(similarity, open('similarity.pkl','wb'))
-
-
-The Streamlit app loads these instantly.
-
-🎨 Streamlit Application
-
-Your app.py includes:
-
-✔ Custom CSS
-
-Card hover effects
-
-Dark theme
-
-Gradient headings
-
-Match score highlights
-
-Overview container styling
-
-Responsive layout
-
-✔ JavaScript for Smooth Scroll
-
-components.html() used to scroll to:
-
-Results section
-
-Overview section
-
-✔ API Retry Logic
-
-Handles TMDB rate-limit & retries:
-
-retry_strategy = Retry(total=3, backoff_factor=0.5)
-
-🗂 Project Structure
 CineMatch-AI/
 │
-├── app.py               # Streamlit Frontend + Backend
-├── movies.pkl           # Preprocessed movie metadata
-├── similarity.pkl       # Cosine similarity matrix
-├── requirements.txt     # Clean deployment dependencies
-└── README.md            # Documentation
-
-💻 Run Locally
-git clone https://github.com/<your-username>/CineMatch-AI.git
-cd CineMatch-AI
-pip install -r requirements.txt
-streamlit run app.py
-
-🧾 requirements.txt
-
-Your final minimal (correct) file:
-
-streamlit
-pandas
-numpy
-requests
-urllib3
-
-
-
-
-☁️ Deployment (Streamlit Cloud)
-
-Push to GitHub
-
-Go to https://streamlit.io/cloud
-
-Deploy app → Select repo → Choose app.py
-
-Done 🎉
-
-No card required. Hosting is completely free.
-
+├── app.py                # Main Streamlit application (Frontend + Backend)
+├── movies.pkl            # Pickled dataframe containing movie metadata
+├── similarity.pkl        # Pickled cosine similarity matrix
+├── requirements.txt      # List of dependencies
+└── README.md             # Project documentation
 🚀 Future Enhancements
+[ ] Hybrid Filtering: Combine content-based with collaborative filtering.
 
-Actor/Director search
+[ ] Search: Add functionality to search by Actor or Director.
 
-Collaborative filtering model
+[ ] Trailers: Embed YouTube trailers for recommendations.
 
-Hybrid deep-learning embeddings
+[ ] Watchlist: Allow users to save movies to a list.
 
-Watchlist system
-
-Movie trailers integration
-
-More TMDB metadata (budget, revenue, runtime, etc.)
-
-👨‍💻 Developer
-
+👨‍💻 Author
 Yuvraj Lamba
+
 Machine Learning & Frontend Developer
-🚀 Passionate about AI, ML, React, and full-stack apps.
+
+Passionate about AI, React, MERN Stack, and building full-stack applications.
 
 ❤️ Credits
+Dataset: Kaggle TMDB 5000 Movie Dataset
 
-TMDB API
-
-Kaggle TMDB 5000 Dataset
-
-Streamlit
-
-Scikit-Learn
-
+API: The Movie Database (TMDB)
